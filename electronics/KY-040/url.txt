@@ -1,0 +1,13 @@
+
+
+https://www.youtube.com/watch?v=IT-Mi75B6hA
+
+http://www.poketcode.com/pygame.html
+
+http://pygame.org/wiki/toggle_fullscreen?parent=
+
+http://www.pygame.org/docs/ref/mouse.html
+
+http://pygametutorials.wikidot.com/book-event
+
+http://arduino.stackexchange.com/questions/16365/reading-from-a-ky-040-rotary-encoder-with-digispark
