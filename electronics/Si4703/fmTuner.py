@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# 
+
 #Python Version 2 code
 
 # Many Thanks to Nathan Seidle at Sparkfun for his Arduino Code Example
@@ -54,10 +57,10 @@ def write_registers():
     global reg
     global readreg
     cmd, writereg[0] = divmod(reg[2], 1<<8)
-    writereg[1], writereg[2] = divmod(reg[3], 1<<8)
-    writereg[3], writereg[4] = divmod(reg[4], 1<<8)
-    writereg[5], writereg[6] = divmod(reg[5], 1<<8)
-    writereg[7], writereg[8] = divmod(reg[6], 1<<8)
+    writereg[1], writereg[2]  = divmod(reg[3], 1<<8)
+    writereg[3], writereg[4]  = divmod(reg[4], 1<<8)
+    writereg[5], writereg[6]  = divmod(reg[5], 1<<8)
+    writereg[7], writereg[8]  = divmod(reg[6], 1<<8)
     writereg[9], writereg[10] = divmod(reg[7], 1<<8)
     w6 = i2c.write_i2c_block_data(si4703_addr, cmd, writereg)
     readreg[16] = cmd #readreg
@@ -123,7 +126,7 @@ def setvolume(newvolume):
     reg[SYSCONFIG2] &= 0xFFF0 #Clear volume bits
     reg[SYSCONFIG2] = newvolume #Set volume to lowest
     write_registers()
-    return
+    return newvolume
 
 def init():
     # init code needs to activate 2-wire (i2c) mode
@@ -153,8 +156,8 @@ def init():
     reg[SYSCONFIG1] |= (1<<12) #Enable RDS  --> si4703 does not have GPIO 3
     reg[SYSCONFIG1] |= (1<< 2) #GPIO high on STC/RDS
     reg[SYSCONFIG2] &= 0xFFF0; #Clear volume bits
-    reg[SYSCONFIG2] = 0x0000; #Set volume to lowest
-    reg[SYSCONFIG3] = 0x0100; #Set extended volume range (too loud for me without this)
+    reg[SYSCONFIG2]  = 0x0000; #Set volume to lowest
+    reg[SYSCONFIG3]  = 0x0100; #Set extended volume range (too loud for me without this)
     write_registers()
     return
 
@@ -164,7 +167,7 @@ def seek(direction):
     if direction == 0:
     #   reg[POWERCFG] &= ~(1<<1) ## orig
         reg[POWERCFG] &= ~(1<<9) ## daq fix
-    #	reg[POWERCFG] &= 0xFEFF; ## daq options
+    #   reg[POWERCFG] &= 0xFEFF; ## daq options
     else:
         reg[POWERCFG] |= (1<<9)
     reg[POWERCFG] |= (1<<8)
@@ -180,7 +183,7 @@ def seek(direction):
     write_registers()
     return
 
-currvol = 10
+currvol = 15
 init() #init stuff
 
 changechannel(963)  #Default start up is QFM96 Columbus, Classic Rock!!
@@ -191,6 +194,18 @@ setvolume(currvol)
 
 ans = True
 while ans:
+
+    print ("====================")
+    print ("Curr Chan=", float(float(getchannel())/float(10)))
+    print ("Curr Vol=", currvol)
+    print ("Stereo or Mono: ")
+    if reg[STATUSRSSI] & (1<<8):
+        print ("Stereo")
+    else:
+        print ("Mono")
+
+    print ("====================")
+
     print ("f1) Go to  96.3 QFM96")
     print ("f2) Go to  97.9 WNCI")
     print ("f3) Go to  99.7 Blitz")
@@ -200,18 +215,19 @@ while ans:
     print ("=) Channel Number (=101.1)")
     print ("w) Tune Up")
     print ("s) Tune Down")
-    print ("c) Print Current Channel")
+ #   print ("c) Print Current Channel")
     print ("d) Display Status")
     print ("r} Write RDS")
     print ("r2} Display RDS Groups 2A")
-    print ("4) Seek Down")
-    print ("5) Seek Up")
+    print (">) Seek Down")
+    print ("<) Seek Up")
     print ("")
     
-    ans = raw_input(">")
-    if ans == "5":
+    ans = raw_input(">: ")
+
+    if ans == ">":
         seek (1) #1=up
-    if ans == "4":
+    if ans == "<":
         seek (0) #0=down
 
     if ans == "f1":
@@ -225,35 +241,35 @@ while ans:
 
     if ans == "+":
         currvol += 1
-        setvolume (currvol)
-	print "Curr Vol=", currvol
-    if ans == "c":
-        print
-        print "Curr Chan=", float(float(getchannel())/float(10))
-        print 
+        currvol = setvolume (currvol)
+#        print "Curr Vol=", currvol
+#    if ans == "c":
+#        print
+#        print "Curr Chan=", float(float(getchannel())/float(10))
+#        print 
     if ans == "-":
         currvol -= 1
-        setvolume (currvol)
-        print "Curr Vol=", currvol
+        currvol = setvolume (currvol)
+#        print "Curr Vol=", currvol
     if ans == "w":
         currchan = getchannel()
         wc = currchan + 2
         if wc >= 878 and wc <= 1080:
             currchan = wc
             changechannel(currchan)
-        print "Curr Chan=", float(float(getchannel())/float(10))
+#        print "Curr Chan=", float(float(getchannel())/float(10))
     if ans == "s":
         currchan = getchannel()
         wc = currchan - 2
         if wc >= 878 and wc <= 1080:
             currchan = wc
             changechannel(currchan)
-        print "Curr Chan=", float(float(getchannel())/float(10))
+#        print "Curr Chan=", float(float(getchannel())/float(10))
     if ans != "" and ans[0] == "=":
         wc = float(ans[1:])
         wc *= 10
         if wc < 878 or wc > 1080:
-            print ("Invalid Channel")
+            print ("* * * Invalid Channel * * *")
             print ("")
         else:    
             changechannel(int(wc))
